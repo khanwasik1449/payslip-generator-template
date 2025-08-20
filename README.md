@@ -20,5 +20,3 @@ This project is a **Google Apps Script Web App** that generates employee payslip
 3. Replace `templateId` and `folderId` with your own Google Docs & Drive IDs
 4. Deploy as a **Web App** (Publish → Deploy → Web App)
 
-## 📜 License
-MIT
