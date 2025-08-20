@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #ffffff;
+      padding: 30px 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 25px;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .generate {
+      background-color: #2c3e50;
+      color: #fff;
+    }
+
+    .generate:hover {
+      background-color: #1a252f;
+    }
+
+    .reset {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+
+    .reset:hover {
+      background-color: #d0d0d0;
+    }
+
+    #result {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    #result a {
+      color: #2c3e50;
+      text-decoration: none;
+    }
+
+    #result a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px 15px;
+      }
+      .button-group {
+        flex-direction: column;
+      }
+    }
+
+    /* Reset Confirmation Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-box {
+      background-color: #fff;
+      padding: 25px 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-box p {
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .modal-actions .yes {
+      background-color: #c0392b;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .modal-actions .yes:hover {
+      background-color: #a93226;
+    }
+
+    .modal-actions .no {
+      background-color: #bdc3c7;
+      color: #2c3e50;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .modal-actions .no:hover {
+      background-color: #95a5a6;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Employee Payslip Generator</h2>
+    <form id="payslipForm">
+      <label for="employeeName">Employee Name</label>
+      <input name="employeeName" placeholder="e.g. John Doe" required>
+
+      <label for="pin">PIN</label>
+      <input name="pin" placeholder="Employee ID or PIN" required>
+
+      <label for="designation">Designation</label>
+      <input name="designation" placeholder="e.g. Software Engineer" required>
+
+      <label for="joiningDate">Joining Date</label>
+      <input name="joiningDate" type="date" required>
+
+      <label for="salary">Salary</label>
+      <input name="salary" type="number" placeholder="Base Salary (Monthly)" required>
+
+      <label for="payslipMonth">Payslip Month</label>
+      <input name="payslipMonth" placeholder="e.g. July 2025" required>
+
+      <label for="transport">Transport</label>
+      <input name="transport" type="number" placeholder="Optional">
+
+      <label for="allowance">Other Allowances</label>
+      <input name="allowance" type="number" placeholder="Optional">
+
+      <label for="tax">Tax</label>
+      <input name="tax" type="number" placeholder="Optional">
+
+      <label for="otherDeductions">Other Deductions</label>
+      <input name="otherDeductions" type="number" placeholder="Optional">
+
+      <div class="button-group">
+        <button type="submit" class="generate">Generate Payslip PDF</button>
+        <button type="button" class="reset" id="resetBtn">Reset</button>
+      </div>
+    </form>
+
+    <div id="result"></div>
+
+    <!-- Custom Reset Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+      <div class="modal-box">
+        <p>Are you sure you want to clear the form and generate another payslip?</p>
+        <div class="modal-actions">
+          <button id="confirmReset" class="yes">Yes, Reset</button>
+          <button id="cancelReset" class="no">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("payslipForm");
+    const result = document.getElementById("result");
+
+    // Handle form submission
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value === "" ? 0 :
+          isNaN(value) || ["employeeName", "designation", "pin", "payslipMonth"].includes(key)
+          ? value
+          : parseFloat(value);
+      });
+
+      // Show countdown disclaimer
+      let countdown = 20;
+      result.innerHTML = `<p>⏳ Generating PDF... Please wait at least <strong id="countdown">${countdown}</strong> seconds.</p>`;
+      const interval = setInterval(() => {
+        countdown--;
+        document.getElementById("countdown").textContent = countdown;
+        if (countdown <= 0) clearInterval(interval);
+      }, 1000);
+
+      // Run Apps Script function
+      google.script.run.withSuccessHandler(url => {
+        clearInterval(interval);
+        result.innerHTML = `<p><a href="${url}" target="_blank">📄 Download Generated Payslip</a></p>`;
+      }).generatePayslip(data);
+    });
+
+    // Handle Reset with modal
+    const resetBtn = document.getElementById("resetBtn");
+    const modal = document.getElementById("confirmModal");
+    const confirmReset = document.getElementById("confirmReset");
+    const cancelReset = document.getElementById("cancelReset");
+
+    resetBtn.addEventListener("click", () => {
+      modal.style.display = "flex";
+    });
+
+    confirmReset.addEventListener("click", () => {
+      form.reset();
+      result.innerHTML = "";
+      modal.style.display = "none";
+    });
+
+    cancelReset.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+  </script>
+</body>
+</html>
